@@ -1,0 +1,61 @@
+# Nama workflow ini akan muncul di tab 'Actions' di GitHub
+name: Deploy Next.js to Vercel
+
+# Tentukan pemicu (trigger) untuk workflow ini
+on:
+  # Workflow akan berjalan setiap kali ada push ke branch 'main'
+  push:
+    branches: ["main"]
+  # Mengizinkan menjalankan workflow ini secara manual dari tab Actions
+  workflow_dispatch:
+
+# Tentukan pekerjaan (jobs) yang akan dijalankan
+jobs:
+  deploy:
+    # Pekerjaan akan berjalan pada runner 'ubuntu-latest'
+    runs-on: ubuntu-latest
+    
+    # Langkah-langkah (steps) yang akan dieksekusi
+    steps:
+      # Langkah 1: Checkout kode repositori
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      # Langkah 2: Instal Node.js (Vercel merekomendasikan versi 18)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      # Langkah 3: Instal Vercel CLI (jika belum terinstal sebagai dev dependency)
+      # Ini adalah langkah opsional jika Anda menggunakan vercel/nextjs-action,
+      # tetapi baik untuk praktik umum.
+      - name: Install Vercel CLI
+        run: npm install --global vercel
+        
+      # Langkah 4: Instal dependensi proyek
+      - name: Install Dependencies
+        run: npm install
+        
+      # Langkah 5: Build proyek Next.js (opsional, tetapi direkomendasikan untuk verifikasi)
+      # Next.js akan memvalidasi konfigurasinya saat build, memastikan semuanya siap deploy.
+      - name: Build Project
+        run: npm run build
+        
+      # Langkah 6: Deploy ke Vercel
+      # Gunakan Vercel CLI untuk melakukan deployment
+      - name: Deploy to Vercel
+        run: vercel deploy --prod --token $VERCEL_TOKEN
+        # --prod memastikan deployment ke domain utama (Production Deployment)
+        # --token mengambil token API Vercel dari Secrets GitHub
+        
+        # Tentukan variabel lingkungan (environment variables) yang diperlukan
+        env:
+          # VERCEL_TOKEN: Token Vercel API, HARUS disimpan sebagai GitHub Secret
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          
+          # VERCEL_ORG_ID dan VERCEL_PROJECT_ID: Opsional, tetapi direkomendasikan
+          # untuk mengikat deployment ke Organization/Project spesifik. 
+          # Anda bisa mendapatkannya dari pengaturan proyek di dasbor Vercel.
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
